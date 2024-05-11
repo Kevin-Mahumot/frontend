@@ -49,11 +49,11 @@ const toggleVisibility = () => {
   emit('toggle-visibility');
 };
 
-const socket = io('http://localhost:4000');
+const socket = io('https://socket-qe0f.onrender.com');
 
 const fetchMessages = async () => {
     try {
-        const response = await axios.get('http://localhost:4000/messages');
+        const response = await axios.get('https://socket-qe0f.onrender.com/messages');
         messages.value = response.data;
     } catch (error) {
         console.error('Error fetching messages:', error);
@@ -67,7 +67,7 @@ const sendMessage = async () => {
     };
 
     try {
-        await axios.post('http://localhost:4000/messages', message);
+        await axios.post('https://socket-qe0f.onrender.com/messages', message);
         messageInput.value = '';
     } catch (error) {
         console.error('Error sending message:', error);
