@@ -8,14 +8,14 @@
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
       </svg>
     </div>
-      <div class="w-full  bg-blue-200  px-5" style="max-height: 600px; overflow-y: auto; height: 53vh;">
+      <div class="w-full bg-blue-200  px-2" style="max-height: 420px; overflow-y: auto; height: 53vh;">
         <ul class="my-2">
-          <div v-for="(message, index) in messages" :key="index">
+          <div v-for="(message, index) in messages" :key="index" class="text-right">
             <div v-if="message.username === username">
               <p class="my-2"> <small class="mr-2 text-gray-400">You </small></p>
-              <span class=" bg-indigo-600 p-2 text-white my-2 rounded-lg"> {{ message.text }}</span>
+              <span class="bg-indigo-600 p-2 text-white my-2 rounded-lg"> {{ message.text }}</span>
             </div>
-            <div v-else class="text-right">
+            <div v-else>
               <p class="my-2"><small class="text-gray-400">{{ message.username }}</small></p>
               <span class=" bg-indigo-600 p-2 text-white my-2 rounded-lg"> {{ message.text }}</span>
             </div>
