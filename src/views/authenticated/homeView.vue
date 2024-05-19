@@ -1,4 +1,151 @@
+<script setup>
+import { ref, computed, onMounted } from 'vue';
+import axios from 'axios';
+import { API_URL } from '@/server';
+import { useRouter } from 'vue-router';
+
+const router = useRouter();
+const artists = ref([]);
+const title = ref('top-artists');
+
+const selectedTrackId = ref(null);
+
+// pagination
+const currentPage = ref(1);
+const itemsPerPage = 6;
+
+//fetch artists
+const fetchArtists = () => {
+  axios.get(`${API_URL}spotify-tracks/${title.value}`)
+    .then((response) => {
+      artists.value = response.data.tracks;
+    })
+    .catch((error) => {
+      console.error('An error occurred while fetching Spotify tracks:', error);
+    });
+};
+
+const play = (trackId) => {
+    selectedTrackId.value = trackId;
+};
+
+const closePlayer = () => {
+    selectedTrackId.value = null;
+};
+
+onMounted(() => {
+  fetchArtists();
+});
+
+const paginatedArtists = computed(() => {
+  const start = (currentPage.value - 1) * itemsPerPage;
+  const end = start + itemsPerPage;
+  return artists.value.slice(start, end);
+});
+
+const totalPages = computed(() => Math.ceil(artists.value.length / itemsPerPage));
+
+const nextPage = () => {
+  if (currentPage.value < totalPages.value) {
+    currentPage.value++;
+  }
+};
+
+const previousPage = () => {
+  if (currentPage.value > 1) {
+    currentPage.value--;
+  }
+};
+
+function seeMore() {
+  router.push('/views/artist');
+}
+</script>
+
+
+
 <template>
+  <section class="w-full">
+    <div class="md:flex lg:flex xl:flex justify-between items-center px-4 xl:px-32 lg:px-32 py-12">
+      <h1 class="text-blue-600 text-2xl rubik">Top Tracks</h1>
+      <div class="lg:mr-50">
+      <button @click="seeMore" class="text-sm bg-blue-500 hover:bg-blue-600 text-white  mt-5 py-2 px-4 pl rounded"><i class="fas fa-arrow-right mr-2"></i>See More</button>
+    </div>
+    </div>
+    <div class="lg:flex xl:flex md:flex md:flex-wrap w-full py-0 lg:justify-between xl:justify-between md:justify-between pb-12 lg:px-32 xl:px-32 px-4">
+      <div v-for="(track, index) in paginatedArtists" :key="index" class="bg-blue-400 border border p-4 rounded-lg my-4 mx-2 hover:bg-blue-500 transition-all duration-300 w-full md:w-1/4 lg:w-1/4 xl:w-1/4">
+        <img v-if="track.album.images.length" :src="track.album.images[0].url" alt="Track Image" class="w-full h-full md:w-72 md:h-72 lg:w-72 xl:w-72 lg:h-72 xl:h-72 rounded-lg" />
+        <h1 class="text-black-600 py-2 outfit-header">Track: <span class="outfit-subtext">{{ track.name }}</span></h1>
+        <h2 class="text-black-600 py-1 outfit-header">Artist: <span class="outfit-subtext">{{ track.artists[0].name }}</span></h2>
+        <p v-if="track.album.name" class="text-black-500 py-1 outfit-header">Album: <span class="outfit-subtext">{{ track.album.name }}</span></p>
+        <p v-if="track.popularity" class="text-black-500 py-1 outfit-header">Popularity: <span class="outfit-subtext">{{ track.popularity }}</span></p>
+        <button @click="play(track.id)"
+              class="bg-blue-800 font-bold text-white px-4 py-2 rounded-md hover:bg-blue-600 focus:outline-none "><i class="fas fa-play"></i></button>
+      </div>
+    </div>
+    <div class="flex justify-center items-center mb-12">
+      <button @click="previousPage" :disabled="currentPage === 1" class="px-4 py-2 mx-2 bg-blue-700 font-bold text-white rounded-md hover:bg-blue-600"><i class="fas fa-arrow-left"></i></button>
+      <span class="text-blue-600 rubik mx-2">{{ currentPage }} / {{ totalPages }}</span>
+      <button @click="nextPage" :disabled="currentPage === totalPages" class="px-4 py-2 mx-2 bg-blue-700 font-bold text-white rounded-md hover:bg-blue-600"><i class="fas fa-arrow-right"></i></button>
+    </div>
+  </section>
+ 
+  <transition name="footer">
+    <footer v-if="selectedTrackId" class="animate-slide-in-login fixed bottom-0 left-0 w-full bg-blue-400 pt-7 border-t rounded-lg border-blue-200 p-4 flex justify-between items-center">
+      <iframe :src="'https://open.spotify.com/embed/track/' + selectedTrackId"
+        class="w-full h-24" frameborder="0" allowtransparency="true" allow="encrypted-media"></iframe>
+      <button @click="closePlayer"
+        class="close-button text-gray-500 rubik text-white w-30 ml-4 py-2 bg-blue-500 px-3 rounded-full mb-5 hover:bg-blue-700 focus:outline-none ease-in-out">
+        <i class="fas fa-times text-3xl"></i>
+      </button>
+    </footer>
+  </transition>
+
+</template>
+
+<style>
+.outfit-header {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 700;
+}
+
+.outfit-subtext {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 400;
+}
+
+
+.footer-enter-active, .footer-leave-active {
+    transition: transform 0.5s ease-in-out, opacity 0.5s ease-in-out;
+  }
+  .footer-enter, .footer-leave-to /* .footer-leave-active in <2.1.8 */ {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+
+  
+  
+
+
+</style>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- <template>
   <div class="spotify-container">
     <div class="title-container flex items-center justify-between">
       <h2 class="text-lg text-black rubik mt-5 lg:ml-12 lg:px-5 xl:px-4"><i class="fas fa-music text-blue-500 text-xl mr-2"></i>Top Hits Music</h2>
@@ -85,7 +232,7 @@ function goToMoreMusic() {
 
 
 
-<!-- <script setup>
+ <script setup>
 import axios from 'axios';
 import { ref } from 'vue';
 import { API_URL } from '@/server';
@@ -128,4 +275,4 @@ axios.get(`${API_URL}spotify-artist`)
       </div>
     </div>
   </section>
-</template> -->
+</template> --> 

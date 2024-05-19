@@ -156,10 +156,10 @@ onMounted(fetchData);
 
           <RouterLink to="/views/manage" v-show="userRole == 'admin'">
             <section class="flex items-center">
-              <p
+              <!-- <p
                 class="mx-2 lg:mx-6 xl:mx-6  flex justify-center items-center font-bold  h-10 w-10 rounded-full">
                 <i class="fas fa-user text-indigo-600"></i>
-              </p>
+              </p> -->
               <!-- <span class="font-bold">Manage</span> -->
             </section>
           </RouterLink>

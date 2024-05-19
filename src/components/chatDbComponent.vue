@@ -10,13 +10,13 @@
     </div>
       <div class="w-full bg-blue-200  px-2" style="max-height: 420px; overflow-y: auto; height: 53vh;">
         <ul class="my-2">
-          <div v-for="(message, index) in messages" :key="index" class="text-right">
-            <div v-if="message.username === username">
+          <div v-for="(message, index) in messages" :key="index">
+            <div v-if="message.email === email" class="ml-2">
               <p class="my-2"> <small class="mr-2 text-gray-400">You </small></p>
               <span class="bg-indigo-600 p-2 text-white my-2 rounded-lg"> {{ message.text }}</span>
             </div>
-            <div v-else>
-              <p class="my-2"><small class="text-gray-400">{{ message.username }}</small></p>
+            <div v-else class="text-right">
+              <p class="my-2"><small class="text-gray-400">{{ message.email }}</small></p>
               <span class=" bg-indigo-600 p-2 text-white my-2 rounded-lg"> {{ message.text }}</span>
             </div>
           </div>
@@ -24,7 +24,7 @@
       </div>
       <div class="mx-auto sticky left-0 w-full bottom-0 pb-6 bg-blue-200 px-4">
       <div class="flex">
-          <input type="text" class="text-blue-600 px-2 py-3 outline-none rounded w-full  placeholder-blue-600" v-model="messageInput"
+          <input @keyup.enter="sendMessage" type="text" class="text-blue-600 px-2 py-3 outline-none rounded w-full  placeholder-blue-600" v-model="messageInput"
           placeholder="Type your message">
          <button @click="sendMessage" class="bg-blue-600 text-white px-4 ml-2 rounded"><i class="fas fa-paper-plane"></i>
 </button>      
@@ -37,11 +37,18 @@
 import { ref, onMounted } from 'vue';
 import axios from 'axios';
 import io from 'socket.io-client';
+import { useAuthStore } from '@/stores/store';
+import { decodeJWT } from '../stores/jwt';
 
-const messageInput = ref('');
-const messages = ref([]);
-const username = ref(sessionStorage.getItem('You')); 
-const email= ref(sessionStorage.getItem("username"));
+const store = useAuthStore();
+
+let userEmail = '';
+  if (store.token != null) {
+    const decodedToken = decodeJWT(store.token);
+    userEmail = decodedToken.email;
+  }
+
+
 
 const emit = defineEmits(['toggle-visibility']);
 
@@ -49,36 +56,48 @@ const toggleVisibility = () => {
   emit('toggle-visibility');
 };
 
-const socket = io('https://socket-qe0f.onrender.com');
+const messageInput = ref('');
+  const messages = ref([]);
+  const email = ref(userEmail); 
+  
+  let socket;
 
-const fetchMessages = async () => {
+  const fetchMessages = async () => {
     try {
         const response = await axios.get('https://socket-qe0f.onrender.com/messages');
         messages.value = response.data;
+        console.log(messages.value)
     } catch (error) {
         console.error('Error fetching messages:', error);
     }
 };
+  
+  onMounted(() => {
+    socket = io('https://socket-qe0f.onrender.com');
+  
+    socket.on('message', (data) => {
+      messages.value.push(data);
+      // sessionStorage.setItem('chatMessages', JSON.stringify(messages.value));
+    });
+    fetchMessages();
 
-const sendMessage = async () => {
+  });
+  
+  const sendMessage = () => {
     const message = {
-        username: email.value,
-        text: messageInput.value
+      email: email.value,
+      text: messageInput.value
     };
+    // socket.emit('message', message);
+   
 
-    try {
-        await axios.post('https://socket-qe0f.onrender.com/messages', message);
-        messageInput.value = '';
-    } catch (error) {
-        console.error('Error sending message:', error);
-    }
-};
+    const response = axios.post('https://socket-qe0f.onrender.com/messages',message);
+ messageInput.value = '';
+    console.log(response.data);
+  };
 
-socket.on('message', (message) => {
-    messages.value.push(message);
-});
-
-onMounted(fetchMessages); 
+  
+  
 </script>
 
   
@@ -101,5 +120,7 @@ onMounted(fetchMessages);
   ::-webkit-scrollbar-thumb:hover {
     background: rgba(0, 0, 0, 0.1); 
   }
+
+ 
   </style>
   
